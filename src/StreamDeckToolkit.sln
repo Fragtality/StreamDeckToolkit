@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28606.126
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamDeckLib", "StreamDeckLib\StreamDeckLib.csproj", "{19F24D43-79DB-47B6-AEDA-BAEA3B2F1962}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SamplePlugin", "SamplePlugin\SamplePlugin.csproj", "{7FCB0FEF-FC38-4187-858C-425FB0664F4E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{87F0DB03-6058-40D9-9510-D516FDA578AE}"
@@ -30,9 +28,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Registration", "Registratio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamDeckLib.Config", "StreamDeckLib.Config\StreamDeckLib.Config.csproj", "{32D1D35F-58ED-4BB2-B1CE-473C89757282}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleWebPlugin", "SampleWebPlugin\SampleWebPlugin.csproj", "{6CCD81B1-964E-49F6-AACD-577FE52B5317}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleWebPlugin", "SampleWebPlugin\SampleWebPlugin.csproj", "{6CCD81B1-964E-49F6-AACD-577FE52B5317}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleDIPlugin", "SampleDIPlugin\SampleDIPlugin.csproj", "{FF0C8635-DDA9-4799-9B63-850119435DAC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleDIPlugin", "SampleDIPlugin\SampleDIPlugin.csproj", "{FF0C8635-DDA9-4799-9B63-850119435DAC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamDeckLib", "StreamDeckLib\StreamDeckLib.csproj", "{03F42DE2-86D2-439A-9FDF-78E90D99557D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,10 +40,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{19F24D43-79DB-47B6-AEDA-BAEA3B2F1962}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{19F24D43-79DB-47B6-AEDA-BAEA3B2F1962}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{19F24D43-79DB-47B6-AEDA-BAEA3B2F1962}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{19F24D43-79DB-47B6-AEDA-BAEA3B2F1962}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7FCB0FEF-FC38-4187-858C-425FB0664F4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7FCB0FEF-FC38-4187-858C-425FB0664F4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7FCB0FEF-FC38-4187-858C-425FB0664F4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -64,6 +60,10 @@ Global
 		{FF0C8635-DDA9-4799-9B63-850119435DAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF0C8635-DDA9-4799-9B63-850119435DAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF0C8635-DDA9-4799-9B63-850119435DAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03F42DE2-86D2-439A-9FDF-78E90D99557D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03F42DE2-86D2-439A-9FDF-78E90D99557D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03F42DE2-86D2-439A-9FDF-78E90D99557D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03F42DE2-86D2-439A-9FDF-78E90D99557D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

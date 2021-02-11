@@ -74,10 +74,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StreamDeckLib\StreamDeckLib.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
