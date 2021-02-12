@@ -7,3 +7,5 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Style", "IDE0016:throw-Ausdruck verwenden", Justification = "<Ausstehend>")]
 [assembly: SuppressMessage("Style", "IDE0044:Modifizierer \"readonly\" hinzufügen", Justification = "<Ausstehend>")]
+[assembly: SuppressMessage("Style", "IDE1006:Benennungsstile", Justification = "<Ausstehend>")]
+[assembly: SuppressMessage("Style", "IDE0060:Nicht verwendete Parameter entfernen", Justification = "<Ausstehend>", Scope = "member", Target = "~M:StreamDeckLib.Config.ConfigurationBuilder.#ctor(System.String[])")]

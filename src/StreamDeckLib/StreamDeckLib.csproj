@@ -223,6 +223,7 @@
     <Compile Include="Extensions\HostingExtensions.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="HostedServices\StreamDeckHostedService.cs" />
+    <Compile Include="IActionController.cs" />
     <Compile Include="IGlobalSettings.cs" />
     <Compile Include="IStreamDeckProxy.cs" />
     <Compile Include="Messages\BaseStreamDeckArgs.cs" />
@@ -252,6 +253,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="CopyLibrary.ps1" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -263,4 +265,7 @@
     <Error Condition="!Exists('..\packages\Microsoft.Extensions.Configuration.UserSecrets.5.0.0\build\netstandard2.0\Microsoft.Extensions.Configuration.UserSecrets.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Extensions.Configuration.UserSecrets.5.0.0\build\netstandard2.0\Microsoft.Extensions.Configuration.UserSecrets.targets'))" />
   </Target>
   <Import Project="..\packages\Microsoft.Extensions.Configuration.UserSecrets.5.0.0\build\netstandard2.0\Microsoft.Extensions.Configuration.UserSecrets.targets" Condition="Exists('..\packages\Microsoft.Extensions.Configuration.UserSecrets.5.0.0\build\netstandard2.0\Microsoft.Extensions.Configuration.UserSecrets.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>powershell -ExecutionPolicy Unrestricted -file "$(ProjectDir)CopyLibrary.ps1" $(ConfigurationName)</PostBuildEvent>
+  </PropertyGroup>
 </Project>

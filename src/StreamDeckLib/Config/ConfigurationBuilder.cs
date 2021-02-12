@@ -16,25 +16,8 @@ namespace StreamDeckLib.Config
 
 		private ConfigurationBuilder(string[] args) {
 
-#if DEBUG
-			// This gives us our "first chance" debugging, before even parsing the command
-			// line args, without the need to manually edit the code to toggle the feature
-			// ability on or off.
-
-			if (args.Select(arg => arg.Replace("--", "-"))
-							.Any(arg => arg.Equals("-break")))
-			{
-				Console.WriteLine("Debugging has been requested. Waiting for a debugger to attach...");
-				Debugger.Launch();
-
-				while (!Debugger.IsAttached)
-				{
-					Task.Delay(500).GetAwaiter().GetResult();
-					Console.Write(".");
-				}
-			}
-#endif
 		}
+
 		private static ConfigurationBuilder Instance;
 
 		public static ConfigurationBuilder BuildDefaultConfiguration(string[] args) {
@@ -43,7 +26,7 @@ namespace StreamDeckLib.Config
 			Directory.SetCurrentDirectory(dir);
 
 			var configuration = new CONFIG.ConfigurationBuilder()
-													.AddJsonFile("appsettings.json")
+													.AddJsonFile("logsettings.json") //CHANGED
 													.Build();
 
 			Log.Logger = new LoggerConfiguration()

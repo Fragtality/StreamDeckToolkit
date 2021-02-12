@@ -13,6 +13,8 @@ namespace StreamDeckLib
 	internal class StreamDeckProxy : IStreamDeckProxy
 	{
 		private readonly ClientWebSocket _Socket = new ClientWebSocket();
+		//CHANGED
+		private static bool isSending = false;
 
 		public WebSocketState State { get { return _Socket.State; } }
 
@@ -25,18 +27,44 @@ namespace StreamDeckLib
 			return _Socket.SendAsync(GetPluginRegistrationBytes(registerEvent, uuid), WebSocketMessageType.Text, true, CancellationToken.None);
 		}
 
-		public Task SendStreamDeckEvent(BaseStreamDeckArgs args)
+		//CHANGED
+		public async Task SendStreamDeckEvent(BaseStreamDeckArgs args)
 		{
 			var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(args));
-			return _Socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+			while (isSending) { }
+
+			isSending = true;
+			try
+			{
+				await _Socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+			}
+			catch (Exception ex)
+			{
+				throw ex;
+			}
+			finally
+			{
+				isSending = false;
+
+			}
 		}
 
+		//CHANGED
 		public async Task<string> GetMessageAsString(CancellationToken token)
 		{
 			var buffer = new byte[65536];
-			var segment = new ArraySegment<byte>(buffer, 0, buffer.Length);
-			await _Socket.ReceiveAsync(segment, token);
+			var segment = new ArraySegment<byte>(buffer, 0, buffer.Length); ;
+			var result = new WebSocketReceiveResult(0, WebSocketMessageType.Text, false);
+			var totalCount = 0;
+
+			while (!result.EndOfMessage)
+			{
+				result = await _Socket.ReceiveAsync(segment, token);
+				totalCount += result.Count;
+				segment = new ArraySegment<byte>(buffer, totalCount, buffer.Length - totalCount);
+			}
 			var jsonString = Encoding.UTF8.GetString(buffer);
+
 			return jsonString;
 		}
 

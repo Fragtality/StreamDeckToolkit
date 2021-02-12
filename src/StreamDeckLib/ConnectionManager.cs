@@ -11,6 +11,7 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace StreamDeckLib
 {
@@ -24,6 +25,8 @@ namespace StreamDeckLib
 		private readonly string _uuid;
 		private readonly string _registerEvent;
 		private IStreamDeckProxy _proxy;
+		private KeyValuePair<StreamDeckEventPayload, BaseStreamDeckAction> _lastMessage; //CHANGED
+		private IActionController _ActionController; //CHANGED
 		private IGlobalSettings _globalSettings;
 		public Info Info { get; private set; }
 
@@ -54,8 +57,13 @@ namespace StreamDeckLib
 			_proxy = streamDeckProxy ?? new StreamDeckProxy();
 		}
 
-		private ConnectionManager(StreamDeckToolkitOptions options, ILoggerFactory loggerFactory = null, IStreamDeckProxy streamDeckProxy = null) : this()
+		//CHANGED
+		private ConnectionManager(StreamDeckToolkitOptions options, ILoggerFactory loggerFactory = null, IActionController actionController = null, IStreamDeckProxy streamDeckProxy = null) : this()
 		{
+			if (actionController == null) throw new ArgumentNullException("actionManager", "ActionManager cannot be null, these should be retrieved from commandline args."); //CHANGED
+			_ActionController = actionController; //CHANGED
+			_ActionController.DeckManager = this;
+
 			var myInfo = JsonConvert.DeserializeObject<Info>(options.Info);
 			Info = myInfo;
 			_port = options.Port;
@@ -67,12 +75,13 @@ namespace StreamDeckLib
 			_logger = loggerFactory?.CreateLogger<ConnectionManager>();
 		}
 
-		public static ConnectionManager Initialize(string[] commandLineArgs, ILoggerFactory loggerFactory = null, IStreamDeckProxy streamDeckProxy = null)
+		//CHANGED
+		public static ConnectionManager Initialize(string[] commandLineArgs, ILoggerFactory loggerFactory = null, IActionController actionController = null, IStreamDeckProxy streamDeckProxy = null)
 		{
 			try
 			{
 				var options = ParseCommandlineArgs(commandLineArgs);
-				return new ConnectionManager(options, loggerFactory, streamDeckProxy);
+				return new ConnectionManager(options, loggerFactory, actionController, streamDeckProxy);
 			}
 			catch
 			{
@@ -142,6 +151,70 @@ namespace StreamDeckLib
 			_logger?.LogError(e.Exception, "Error handling StreamDeck information");
 		}
 
+		//CHANGED
+		private async Task<TaskStatus> ReceiveMessageAsync(CancellationToken token)
+		{
+			switch (_proxy.State)
+			{
+				case WebSocketState.CloseReceived:
+				case WebSocketState.Closed:
+				case WebSocketState.Aborted:
+					return TaskStatus.Canceled;
+			}
+
+			var jsonString = await _proxy.GetMessageAsString(token);
+
+			if (!string.IsNullOrEmpty(jsonString) && !jsonString.StartsWith("\u0000", StringComparison.OrdinalIgnoreCase))
+			{
+				try
+				{
+					var msg = JsonConvert.DeserializeObject<StreamDeckEventPayload>(jsonString);
+
+					if (msg == null)
+					{
+						_logger?.LogError($"Unknown message received: {jsonString}");
+
+						return TaskStatus.Faulted;
+					}
+
+					if (string.IsNullOrWhiteSpace(msg.context) && string.IsNullOrWhiteSpace(msg.action))
+					{
+						BroadcastMessage(msg);
+						return TaskStatus.Faulted;
+					}
+					else
+					{
+
+						var action = GetInstanceOfAction(msg.context, msg.action);
+						if (action == null)
+						{
+							_logger?.LogWarning($"The action requested (\"{msg.action}\") was not found as being registered with the plugin");
+							return TaskStatus.Faulted;
+						}
+
+
+						if (!_EventDictionary.ContainsKey(msg.Event))
+						{
+							_logger?.LogWarning($"Plugin does not handle the event '{msg.Event}'");
+							return TaskStatus.Faulted;
+						}
+
+						//CHANGED
+						_lastMessage = new KeyValuePair<StreamDeckEventPayload, BaseStreamDeckAction>(msg, action);
+						return TaskStatus.RanToCompletion;
+						//await _EventDictionary[msg.Event]?.Invoke(action, msg); //CHANGED
+					}
+				}
+				catch (Exception ex)
+				{
+					_logger?.LogError(ex, "Error while processing payload from StreamDeck");
+					return TaskStatus.Faulted;
+				}
+			}
+			else
+				return TaskStatus.Faulted;
+		}
+
 		private async Task Run(CancellationToken token)
 		{
 			_logger?.LogTrace($"{nameof(ConnectionManager)}.{nameof(Run)} port:{_port}, event: {_registerEvent}, uuid: {_uuid}");
@@ -168,55 +241,20 @@ namespace StreamDeckLib
 
 				if (!keepRunning) break;
 
-				var jsonString = await _proxy.GetMessageAsString(token);
+				var messageTask = ReceiveMessageAsync(token);
 
-				if (!string.IsNullOrEmpty(jsonString) && !jsonString.StartsWith("\u0000", StringComparison.OrdinalIgnoreCase))
+				while (!messageTask.IsCompleted)
 				{
-					try
-					{
-						var msg = JsonConvert.DeserializeObject<StreamDeckEventPayload>(jsonString);
-
-						if (msg == null)
-						{
-							_logger?.LogError($"Unknown message received: {jsonString}");
-
-							continue;
-						}
-
-						if (string.IsNullOrWhiteSpace(msg.context) && string.IsNullOrWhiteSpace(msg.action))
-						{
-							this.BroadcastMessage(msg);
-						}
-						else
-						{
-							var action = GetInstanceOfAction(msg.context, msg.action);
-							if (action == null)
-							{
-								_logger?.LogWarning($"The action requested (\"{msg.action}\") was not found as being registered with the plugin");
-								continue;
-							}
-
-
-							if (!_EventDictionary.ContainsKey(msg.Event))
-							{
-								_logger?.LogWarning($"Plugin does not handle the event '{msg.Event}'");
-
-								continue;
-							}
-
-							_EventDictionary[msg.Event]?.Invoke(action, msg);
-
-						}
-
-
-					}
-					catch (Exception ex)
-					{
-						_logger?.LogError(ex, "Error while processing payload from StreamDeck");
-					}
+					_ActionController.Run(token);
+					await Task.Delay(_ActionController.Timing);
 				}
 
-				await Task.Delay(100);
+				if (messageTask.Result == TaskStatus.RanToCompletion)
+				{
+					await _EventDictionary[_lastMessage.Key.Event]?.Invoke(_lastMessage.Value, _lastMessage.Key);
+				}
+
+				messageTask.Dispose();
 			}
 
 			Dispose();
@@ -233,6 +271,22 @@ namespace StreamDeckLib
 				{
 					title = newTitle,
 					TargetType = SetTitleArgs.TargetType.HardwareAndSoftware
+				}
+			};
+
+			await _proxy.SendStreamDeckEvent(args);
+		}
+
+		//CHANGED
+		public async Task SetImageRawAsync(string context, string imgString, string extension = "png")
+		{
+			var args = new SetImageArgs
+			{
+				context = context,
+				payload = new SetImageArgs.Payload
+				{
+					TargetType = SetTitleArgs.TargetType.HardwareAndSoftware,
+					image = $"data:image/{extension};base64, {imgString}"
 				}
 			};
 
@@ -399,6 +453,7 @@ namespace StreamDeckLib
 				if (disposing)
 				{
 					_proxy.Dispose();
+					_ActionController.Dispose(); //CHANGED
 				}
 
 				disposedValue = true;

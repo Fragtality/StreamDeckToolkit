@@ -6,6 +6,9 @@
 **/content/RegisterPluginAndStartStreamDeck.sh
 **/content/RegisterPluginAndStartStreamDeck.ps1
 
+#CUSTOM
+CopyLibrary.ps1
+
 # User-specific files
 *.suo
 *.user
