@@ -11,6 +11,7 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace StreamDeckLib
@@ -23,6 +24,8 @@ namespace StreamDeckLib
 	{
 		private readonly int _port;
 		private readonly string _uuid;
+		public string PluginUUID { get { return _uuid; } } //CHANGED
+		public string FirstDeviceID { get { return Info.devices?.First()?.id; } } //CHANGED
 		private readonly string _registerEvent;
 		private IStreamDeckProxy _proxy;
 		private KeyValuePair<StreamDeckEventPayload, BaseStreamDeckAction> _lastMessage; //CHANGED
@@ -176,11 +179,11 @@ namespace StreamDeckLib
 
 						return TaskStatus.Faulted;
 					}
-
+					//CHANGED
 					if (string.IsNullOrWhiteSpace(msg.context) && string.IsNullOrWhiteSpace(msg.action))
 					{
-						BroadcastMessage(msg);
-						return TaskStatus.Faulted;
+						_lastMessage = new KeyValuePair<StreamDeckEventPayload, BaseStreamDeckAction>(msg, null);
+						return TaskStatus.RanToCompletion;
 					}
 					else
 					{
@@ -202,7 +205,6 @@ namespace StreamDeckLib
 						//CHANGED
 						_lastMessage = new KeyValuePair<StreamDeckEventPayload, BaseStreamDeckAction>(msg, action);
 						return TaskStatus.RanToCompletion;
-						//await _EventDictionary[msg.Event]?.Invoke(action, msg); //CHANGED
 					}
 				}
 				catch (Exception ex)
@@ -251,7 +253,10 @@ namespace StreamDeckLib
 
 				if (messageTask.Result == TaskStatus.RanToCompletion)
 				{
-					await _EventDictionary[_lastMessage.Key.Event]?.Invoke(_lastMessage.Value, _lastMessage.Key);
+					if (_lastMessage.Value == null)
+						_ActionController.OnGlobalEvent(_lastMessage.Key);
+					else
+						await _EventDictionary[_lastMessage.Key.Event]?.Invoke(_lastMessage.Value, _lastMessage.Key);
 				}
 
 				messageTask.Dispose();

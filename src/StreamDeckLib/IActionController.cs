@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using StreamDeckLib.Messages;
 
 namespace StreamDeckLib
 {
@@ -9,5 +10,6 @@ namespace StreamDeckLib
 		int Timing { get; }
 
 		void Run(CancellationToken token);
+		void OnGlobalEvent(StreamDeckEventPayload args);
 	}
 }

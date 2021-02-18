@@ -1,9 +1,11 @@
+using System.Collections.Generic;
+
 namespace StreamDeckLib.Messages
 {
 	public class Info
 	{
 		public Application application { get; set; }
-		public Device[] devices { get; set; }
+		public List<Device> devices { get; set; }
 		public int devicePixelRatio { get; set; }
 
 		public class Application
@@ -16,6 +18,7 @@ namespace StreamDeckLib.Messages
 		public class Device
 		{
 			public string id { get; set; }
+			public string name { get; set; } //CHANGED
 			public Size size { get; set; }
 			public int type { get; set; }
 		}
