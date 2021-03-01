@@ -25,13 +25,26 @@ namespace StreamDeckLib
 		private readonly int _port;
 		private readonly string _uuid;
 		public string PluginUUID { get { return _uuid; } } //CHANGED
-		public string FirstDeviceID { get { return Info.devices?.First()?.id; } } //CHANGED
 		private readonly string _registerEvent;
 		private IStreamDeckProxy _proxy;
 		private KeyValuePair<StreamDeckEventPayload, BaseStreamDeckAction> _lastMessage; //CHANGED
 		private IActionController _ActionController; //CHANGED
 		private IGlobalSettings _globalSettings;
 		public Info Info { get; private set; }
+
+		public Info.Device GetDeviceById(string id)
+		{
+			if (Info.devices != null)
+			{
+				var result = Info.devices.Where(d => d.id == id);
+				if (result != null && result.Count() > 0)
+					return result.First();
+				else
+					return null;
+			}
+			else
+				return null;
+		}
 
 		private ConnectionManager()
 		{
