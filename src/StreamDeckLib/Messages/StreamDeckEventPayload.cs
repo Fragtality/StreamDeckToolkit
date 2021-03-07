@@ -1,5 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace StreamDeckLib.Messages
 {
@@ -49,27 +50,41 @@ namespace StreamDeckLib.Messages
 		//CHANGED
 		public static void SetModelProperties<T>(StreamDeckEventPayload args, T SettingsModel)
 		{
-			var properties = typeof(T).GetProperties();
-			foreach (var prop in properties)
+			try
 			{
-				if (args.payload != null && args.payload.settings != null && args.payload.settings.settingsModel != null)
+				var properties = typeof(T).GetProperties();
+				foreach (var prop in properties)
 				{
-					if (args.PayloadSettingsHasProperty(prop.Name))
+					if (args.payload != null && args.payload.settings != null && args.payload.settings.settingsModel != null)
 					{
-						var value = args.GetPayloadSettingsValue(prop.Name);
-						dynamic value2;
-						if (IsNumericOrBooleanType(prop.PropertyType) && (value is string) && (value as string) == "")
+						if (args.PayloadSettingsHasProperty(prop.Name))
 						{
-							if (IsBooleanType(prop.PropertyType))
-								value2 = false;
-							else
-								value2 = 0;
+							try
+							{
+								var value = args.GetPayloadSettingsValue(prop.Name);
+								dynamic value2;
+								if (IsNumericOrBooleanType(prop.PropertyType) && (value is string) && (value as string) == "")
+								{
+									if (IsBooleanType(prop.PropertyType))
+										value2 = false;
+									else
+										value2 = 0;
+								}
+								else
+									value2 = Convert.ChangeType(value, prop.PropertyType);
+								prop.SetValue(SettingsModel, value2);
+							}
+							catch
+							{
+								Log.Logger.Error($"StreamDeckEventPayload:SetModelProperties - Exception during setting Property {prop?.Name}!");
+							}
 						}
-						else
-							value2 = Convert.ChangeType(value, prop.PropertyType);
-						prop.SetValue(SettingsModel, value2);
 					}
 				}
+			}
+			catch
+			{
+				Log.Logger.Error($"StreamDeckEventPayload:SetModelProperties - Unknown Exception!");
 			}
 		}
 
